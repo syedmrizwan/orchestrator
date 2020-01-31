@@ -1,14 +1,18 @@
 package workflows
 
 import (
+	"context"
+	"io/ioutil"
+	"time"
+
 	"go.uber.org/cadence/activity"
 	"go.uber.org/cadence/workflow"
-	"time"
 )
 
 func init() {
 	activity.Register(getNameActivity)
 	activity.Register(sayHello)
+	activity.Register(persistResult)
 	workflow.Register(DemoWorkflow)
 }
 func getNameActivity() (string, error) {
@@ -17,6 +21,13 @@ func getNameActivity() (string, error) {
 
 func sayHello(name string) (string, error) {
 	return "Hello " + name + "!", nil
+}
+func persistResult(ctx context.Context, data string) error { // Save in DB but for now saving in file
+	activityInfo := activity.GetInfo(ctx)
+	// taskToken := activityInfo.TaskToken
+	runID := activityInfo.WorkflowExecution.RunID
+	fileName := "/home/emumba/Desktop/cadence/" + runID
+	return ioutil.WriteFile(fileName, []byte(runID+"_"+data), 0666)
 }
 func DemoWorkflow(ctx workflow.Context) error {
 	ao := workflow.ActivityOptions{
@@ -43,7 +54,16 @@ func DemoWorkflow(ctx workflow.Context) error {
 		return err
 	}
 
-	workflow.GetLogger(ctx).Info("Result: " + result)
+	err = retry(func() error {
+		return workflow.ExecuteActivity(ctx, persistResult, result).Get(ctx, nil)
+	})
+	if err != nil {
+		return err
+	}
+
+	logger := workflow.GetLogger(ctx)
+	logger.Info("Result: " + result)
+	logger.Info("Workflow completed for WF_RegisterDevicePollerMap")
 
 	return nil
 
