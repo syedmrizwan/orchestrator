@@ -4,6 +4,7 @@ import (
 	"errors"
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/cadence/testsuite"
+	"github.com/syedmrizwan/orchestrator/src/activities"
 	"testing"
 )
 
@@ -30,8 +31,8 @@ func (s *UnitTestSuite) Test_DemoWorkflow() {
 }
 
 func (s *UnitTestSuite) Test_DemoWorkflow_Error() {
-	s.env.OnActivity(getNameActivity).Return("", errors.New("oops")).Once()
-	s.env.OnActivity(getNameActivity).Return("Mock", nil).Once()
+	s.env.OnActivity(activities.GetNameActivity).Return("", errors.New("oops")).Once()
+	s.env.OnActivity(activities.GetNameActivity).Return("Mock", nil).Once()
 	s.env.ExecuteWorkflow(DemoWorkflow)
 	// s.True(s.env.IsWorkflowCompleted())
 
