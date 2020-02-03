@@ -33,15 +33,15 @@ Orchestrator using Uber Cadence
   
   
 
-# usage example
+# Workflow execution
 
 1. Run a worker process for executing workflows by compiling source in src directory
 	```
-	go build -o ./orchestrator
+	make build
 
-	./orchestrator -m worker
+	make run
 	```
-2. There worker process will output verbose messages and will wait for work. Dont close window
+2. Worker process will output verbose messages and will wait for work. Dont close window
 
 3. Open an other terminal for accessing Cadence cli
 
