@@ -1,14 +1,16 @@
 package workflows
 
 import (
-	"time"
 	"github.com/syedmrizwan/orchestrator/src/activities"
 	"go.uber.org/cadence/workflow"
+	"time"
 )
 
 func init() {
 	workflow.Register(DemoWorkflow)
 }
+
+//DemoWorkflow executes three demo purpose activities
 func DemoWorkflow(ctx workflow.Context) error {
 	ao := workflow.ActivityOptions{
 		ScheduleToStartTimeout: 3 * time.Second,

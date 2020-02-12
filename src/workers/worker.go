@@ -18,7 +18,7 @@ const (
 	configFile = "config/development.yaml"
 )
 
-const ApplicationName = "helloWorldGroup"
+const applicationName = "helloWorldGroup"
 
 func startWorkers(h *common.SampleHelper) {
 	// Configure worker options.
@@ -26,7 +26,7 @@ func startWorkers(h *common.SampleHelper) {
 		MetricsScope: h.Scope,
 		Logger:       h.Logger,
 	}
-	h.StartWorkers("test-domain", ApplicationName, workerOptions)
+	h.StartWorkers("test-domain", applicationName, workerOptions)
 }
 
 func startWorkflow(count int) {
@@ -41,7 +41,7 @@ func startWorkflow(count int) {
 	for i := 0; i < count; i++ {
 		workflowOptions := client.StartWorkflowOptions{
 			ID:                              "helloworld_" + uuid.New(),
-			TaskList:                        ApplicationName,
+			TaskList:                        applicationName,
 			ExecutionStartToCloseTimeout:    time.Minute * 1,
 			DecisionTaskStartToCloseTimeout: time.Minute * 1,
 		}
@@ -71,7 +71,7 @@ func main() {
 	var mode string
 	var count int
 	flag.StringVar(&mode, "m", "trigger", "Mode is worker or trigger.")
-	flag.IntVar(&count, "c", 3, "Count of workflow to start")
+	flag.IntVar(&count, "c", 1, "Count of workflow to start")
 	flag.Parse()
 
 	var h common.SampleHelper
