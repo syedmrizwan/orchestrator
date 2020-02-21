@@ -1,74 +1,89 @@
 package main
 
-
 import (
-	"github.com/uber-go/tally"
-	"go.uber.org/cadence/.gen/go/cadence/workflowserviceclient"
-	"go.uber.org/cadence/worker"
-	"go.uber.org/yarpc"
-	"go.uber.org/yarpc/transport/tchannel"
-	"go.uber.org/zap"
-	"go.uber.org/zap/zapcore"
+	"context"
+	"flag"
+	"fmt"
+	"time"
 
+	"github.com/pborman/uuid"
+	"github.com/syedmrizwan/orchestrator/src/workflows"
+	"github.com/uber-common/cadence-samples/cmd/samples/common"
+	"go.uber.org/cadence/client"
+	"go.uber.org/cadence/worker"
+	"go.uber.org/zap"
 )
 
-var HostPort = "127.0.0.1"
-var Domain = "test-domain"
-var TaskListName = "helloWorldGroup"
-var ClientName = "demo-client"
-var CadenceService = "cadence-frontend"
+const (
+	configFile = "config/development.yaml"
+)
 
-func main() {
-	startWorker(buildLogger(), buildCadenceClient())
-}
+const applicationName = "helloWorldGroup"
 
-func buildLogger() *zap.Logger {
-	config := zap.NewDevelopmentConfig()
-	config.Level.SetLevel(zapcore.InfoLevel)
-
-	var err error
-	logger, err := config.Build()
-	if err != nil {
-		panic("Failed to setup logger")
-	}
-
-	return logger
-}
-
-func buildCadenceClient() workflowserviceclient.Interface {
-	ch, err := tchannel.NewChannelTransport(tchannel.ServiceName(ClientName))
-	if err != nil {
-		panic("Failed to setup tchannel")
-	}
-	dispatcher := yarpc.NewDispatcher(yarpc.Config{
-		Name: ClientName,
-		Outbounds: yarpc.Outbounds{
-			CadenceService: {Unary: ch.NewSingleOutbound(HostPort)},
-		},
-	})
-	if err := dispatcher.Start(); err != nil {
-		panic("Failed to start dispatcher")
-	}
-
-	return workflowserviceclient.New(dispatcher.ClientConfig(CadenceService))
-}
-
-func startWorker(logger *zap.Logger, service workflowserviceclient.Interface) {
-	// TaskListName identifies set of client workflows, activities, and workers.
-	// It could be your group or client or application name.
+func startWorkers(h *common.SampleHelper) {
+	// Configure worker options.
 	workerOptions := worker.Options{
-		Logger:       logger,
-		MetricsScope: tally.NewTestScope(TaskListName, map[string]string{}),
+		MetricsScope: h.Scope,
+		Logger:       h.Logger,
 	}
-	work := worker.New(
-		service,
-		Domain,
-		TaskListName,
-		workerOptions)
-	err := work.Start()
+	h.StartWorkers("test-domain", applicationName, workerOptions)
+}
+
+func startWorkflow(count int) {
+	var h common.SampleHelper
+	h.SetupServiceConfig()
+	workflowclient, err := h.Builder.BuildCadenceClient()
 	if err != nil {
-		panic("Failed to start worker")
+		h.Logger.Error("Failed to build Cadence Client")
+		fmt.Println("error in initiating client, exiting main routing")
+		return
 	}
-	logger.Info("Started Worker.", zap.String("worker", TaskListName))
-	select {}
+	for i := 0; i < count; i++ {
+		workflowOptions := client.StartWorkflowOptions{
+			ID:                              "helloworld_" + uuid.New(),
+			TaskList:                        applicationName,
+			ExecutionStartToCloseTimeout:    time.Minute * 1,
+			DecisionTaskStartToCloseTimeout: time.Minute * 1,
+		}
+		wf, err := workflowclient.StartWorkflow(context.Background(), workflowOptions, workflows.DemoWorkflow)
+		if err != nil {
+			h.Logger.Error("Failed to build Cadence Client")
+			fmt.Println("error in initiating workflow, exiting main routing")
+			return
+		}
+		h.Logger.Info("Started Workflow", zap.String("WorkflowId", wf.ID), zap.String("RunId", wf.RunID))
+
+		// Retrieve the workflow handler
+		wfrun := workflowclient.GetWorkflow(context.Background(), wf.ID, wf.RunID)
+		fmt.Println("GetRunId = ", wfrun.GetRunID())
+
+		// Blocking API
+		// var result string
+		// err = wfrun.Get(context.Background(), result)
+		// if err != nil {
+		// 	fmt.Println("error in wfrun.Get, exiting main routing")
+		// 	return
+		// }
+		// fmt.Println("workflow returned = ", result)
+	}
+}
+func main() {
+	var mode string
+	var count int
+	flag.StringVar(&mode, "m", "trigger", "Mode is worker or trigger.")
+	flag.IntVar(&count, "c", 1, "Count of workflow to start")
+	flag.Parse()
+
+	var h common.SampleHelper
+	h.SetupServiceConfig()
+
+	switch mode {
+	case "worker":
+		startWorkers(&h)
+		// The workers are supposed to be long running process that should not exit.
+		// Use select{} to block indefinitely for samples, you can quit by CMD+C.
+		select {}
+	case "trigger":
+		startWorkflow(count)
+	}
 }
