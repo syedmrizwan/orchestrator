@@ -25,12 +25,12 @@ Orchestrator using Uber Cadence
 6. Describe a domain with Cadence cli
 	
 	`cadence --domain test-domain domain describe`
-7. For WebUI use the following default url http://localhost:8088
+7. For WebUI use this [URL](http://localhost:8088)
 
   
   
 
-# Workflow execution
+# Running cadence worker
 
 1. Run a worker process for executing workflows by compiling source in src directory
 	```
@@ -40,12 +40,21 @@ Orchestrator using Uber Cadence
 	```
 2. Worker process will output verbose messages and will wait for work. Dont close window
 
-3. Open an other terminal for accessing Cadence cli
 
-4. Submit a workflow request 
+# Workflow Execution through REST endpoint
+
+1. Run `go run main.go` from root directory to start go gin Rest server
+
+2. Use this [URL](`localhost:8001/workflow`) to execute worflow
+
+# Workflow Execution using CLI
+
+1. Open another terminal for accessing Cadence CLI
+
+2. Submit a workflow request 
 
 	`
 	cadence --domain test-domain workflow start --wt github.com/syedmrizwan/orchestrator/src/workflows.DemoWorkflow --tl helloWorldGroup -et 300
 	`
 
-5. Optional: Use the WebUI for viewing the Workflow execution steps
+3. Optional: Use the WebUI for viewing the Workflow execution steps
