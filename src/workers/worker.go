@@ -4,6 +4,7 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"github.com/syedmrizwan/orchestrator/env"
 	"time"
 
 	"github.com/pborman/uuid"
@@ -14,11 +15,8 @@ import (
 	"go.uber.org/zap"
 )
 
-const (
-	configFile = "config/development.yaml"
-)
 
-const applicationName = "helloWorldGroup"
+var applicationName = env.Env.ApplicationName
 
 func startWorkers(h *common.SampleHelper) {
 	// Configure worker options.

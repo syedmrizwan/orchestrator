@@ -1,17 +1,18 @@
 package client
 
 import (
+	"github.com/syedmrizwan/orchestrator/env"
 	"go.uber.org/cadence/.gen/go/cadence/workflowserviceclient"
 	"go.uber.org/cadence/client"
 	"go.uber.org/yarpc"
 	"go.uber.org/yarpc/transport/tchannel"
 )
 
-var HostPort = "127.0.0.1:7933"
-var Domain = "test-domain"
-var TaskListName = "helloWorldGroup"
-var ClientName = "test-domain"
-var CadenceService = "cadence-frontend"
+var HostPort = env.Env.Host
+var Domain = env.Env.Domain
+var TaskListName = env.Env.ApplicationName
+var ClientName = env.Env.ClientName
+var CadenceService = env.Env.Service
 
 func buildCadenceServiceClient() (workflowserviceclient.Interface, error) {
 	ch, err := tchannel.NewChannelTransport(tchannel.ServiceName(ClientName))
