@@ -13,9 +13,9 @@ func init() {
 //DemoWorkflow executes three demo purpose activities
 func DemoWorkflow(ctx workflow.Context) error {
 	ao := workflow.ActivityOptions{
-		ScheduleToStartTimeout: 3 * time.Second,
-		StartToCloseTimeout:    3 * time.Second,
-		// ScheduleToCloseTimeout: 10 * time.Second,
+		ScheduleToStartTimeout: 10 * time.Second,
+		StartToCloseTimeout:    10 * time.Second,
+		//ScheduleToCloseTimeout: 10 * time.Second,
 		// HeartbeatTimeout:       time.Second * 20,
 	}
 	ctx = workflow.WithActivityOptions(ctx, ao)

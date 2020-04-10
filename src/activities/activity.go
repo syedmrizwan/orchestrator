@@ -4,6 +4,7 @@ import (
 	"context"
 	"go.uber.org/cadence/activity"
 	"io/ioutil"
+	"time"
 )
 
 func init() {
@@ -28,5 +29,6 @@ func PersistResult(ctx context.Context, data string) error { // Save in DB but f
 	// taskToken := activityInfo.TaskToken
 	runID := activityInfo.WorkflowExecution.RunID
 	fileName := "/home/emumba/Desktop/cadence/" + runID
+	time.Sleep(6 * time.Second)
 	return ioutil.WriteFile(fileName, []byte(data+"\nRun ID: "+runID), 0666)
 }
