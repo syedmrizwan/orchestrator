@@ -11,7 +11,7 @@ func init() {
 }
 
 //DemoWorkflow executes three demo purpose activities
-func DemoWorkflow(ctx workflow.Context) error {
+func DemoWorkflow(ctx workflow.Context) (*activities.JSONResponse, error) {
 	ao := workflow.ActivityOptions{
 		ScheduleToStartTimeout: 10 * time.Second,
 		StartToCloseTimeout:    10 * time.Second,
@@ -25,7 +25,7 @@ func DemoWorkflow(ctx workflow.Context) error {
 		return workflow.ExecuteActivity(ctx, activities.GetNameActivity).Get(ctx, &name)
 	})
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	var result string
@@ -33,21 +33,22 @@ func DemoWorkflow(ctx workflow.Context) error {
 		return workflow.ExecuteActivity(ctx, activities.SayHello, name).Get(ctx, &result)
 	})
 	if err != nil {
-		return err
+		return nil, err
 	}
 
+	var persistResult activities.JSONResponse
 	err = retry(func() error {
-		return workflow.ExecuteActivity(ctx, activities.PersistResult, result).Get(ctx, nil)
+		return workflow.ExecuteActivity(ctx, activities.PersistResult, result).Get(ctx, &persistResult)
 	})
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	logger := workflow.GetLogger(ctx)
 	logger.Info("Result: " + result)
 	logger.Info("Workflow completed for WF_RegisterDevicePollerMap")
 
-	return nil
+	return &persistResult, nil
 
 }
 
